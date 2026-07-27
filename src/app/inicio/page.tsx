@@ -1,41 +1,19 @@
 /**
- * /inicio — Carnet digital del/de la miembro.
- * Muestra identidad (nombre, N° de miembro) + estado de cuota DERIVADO
- * (al_dia / suspendida / en_pausa, calculado en vivo por la vista).
- * El pago es presencial en el gimnasio (el admin lo registra); por eso acá
- * no hay checkout: el carnet informa el estado y dónde regularizar.
+ * /inicio — Home del/de la miembro: dashboard de mosaicos (según el mockup
+ * de la clienta). Arriba la ficha (nombre + N° + estado); debajo la grilla:
+ * "Cuota y pagos" es REAL (estado derivado en vivo); el resto (rutina, plan
+ * nutricional, medidas, anuncios) son módulos futuros → mosaico "Próximamente".
  */
+import Link from "next/link";
 import { requireUser } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { cerrarSesion } from "@/app/login/actions";
 import { ETIQUETA_ESTADO, type EstadoMiembro } from "@/lib/domain/tipos";
 
-/** Presentación de cada estado en el banner del carnet. */
-const ESTADO_UI: Record<
-  EstadoMiembro,
-  { clase: string; icono: React.ReactNode; lead: string; sub: string; pill: string }
-> = {
-  al_dia: {
-    clase: "is-ok",
-    icono: <IconCheck />,
-    lead: "Estás al día",
-    sub: "Tu cuota de este mes está paga. ¡A entrenar!",
-    pill: "pill-ok",
-  },
-  suspendida: {
-    clase: "is-bad",
-    icono: <IconClock />,
-    lead: "Tu cuota está pendiente",
-    sub: "Acercate al gimnasio para regularizarla y seguir entrenando.",
-    pill: "pill-bad",
-  },
-  en_pausa: {
-    clase: "is-idle",
-    icono: <IconPause />,
-    lead: "Tu membresía está en pausa",
-    sub: "Cuando quieras retomar, avisanos en el gimnasio.",
-    pill: "pill-idle",
-  },
+const PILL: Record<EstadoMiembro, string> = {
+  al_dia: "pill-ok",
+  suspendida: "pill-bad",
+  en_pausa: "pill-idle",
 };
 
 function iniciales(nombre: string, apellido: string) {
@@ -46,121 +24,115 @@ export default async function InicioPage() {
   const usuario = await requireUser(["miembro"]);
   const supabase = await createClient();
 
-  // La RLS limita esta vista a la fila del/de la propia miembro.
   const { data: miembro } = await supabase
     .from("vista_miembros_estado")
-    .select("nombre, apellido, numero_miembro, estado, created_at")
+    .select("nombre, apellido, numero_miembro, estado")
     .eq("perfil_id", usuario.id)
     .single();
 
-  // Sin fila (caso borde: perfil miembro sin registro): mensaje amable.
   if (!miembro) {
     return (
       <div className="screen">
         <div className="screen-pad" style={{ justifyContent: "center", alignItems: "center", textAlign: "center", gap: 14 }}>
           <span className="brand-mark" style={{ width: 48, height: 48, fontSize: 26, borderRadius: 14 }}>N</span>
           <p className="screen-note">Todavía no encontramos tu ficha. Avisá en el gimnasio.</p>
-          <form action={cerrarSesion}>
-            <button type="submit" className="btn btn-ghost">Cerrar sesión</button>
-          </form>
+          <form action={cerrarSesion}><button type="submit" className="btn btn-ghost">Cerrar sesión</button></form>
         </div>
       </div>
     );
   }
 
   const estado = miembro.estado as EstadoMiembro;
-  const ui = ESTADO_UI[estado] ?? ESTADO_UI.suspendida;
-  const desde = new Date(miembro.created_at).getFullYear();
+  const alDia = estado === "al_dia";
 
   return (
-    <div className="screen">
+    <div className="screen has-bottomnav">
       <header className="appbar">
-        <span />
-        <div className="appbar-title">Mi carnet</div>
+        <span className="appbar-brand" style={{ paddingLeft: 6 }}>
+          <span className="brand-mark brand-mark-sm">N</span>
+        </span>
+        <div className="appbar-title">NiNa&apos;S HIIT</div>
         <form action={cerrarSesion} className="appbar-action">
           <button type="submit" className="appbar-btn" aria-label="Salir">⎋</button>
         </form>
       </header>
 
       <div className="screen-pad">
-        {/* Carnet */}
-        <div className="carnet">
-          <div className="carnet-top">
-            <span className="carnet-brand">
-              <span className="brand-mark brand-mark-sm">N</span>
-              NiNa&apos;S HIIT
-            </span>
-            <span className="carnet-chip">Miembro</span>
+        {/* Ficha del miembro */}
+        <div className="perfil-card">
+          <span className="perfil-avatar">{iniciales(miembro.nombre, miembro.apellido)}</span>
+          <div className="perfil-body">
+            <span className="perfil-name">{miembro.nombre} {miembro.apellido}</span>
+            <span className="perfil-meta">N° de miembro <b className="mono">#{miembro.numero_miembro}</b></span>
           </div>
-
-          <div className="carnet-id">
-            <span className="carnet-avatar mono">{iniciales(miembro.nombre, miembro.apellido)}</span>
-            <div>
-              <div className="carnet-name">{miembro.nombre} {miembro.apellido}</div>
-              <div className="carnet-since">Miembro desde {desde}</div>
-            </div>
-          </div>
-
-          <div className="carnet-num">
-            <span className="carnet-num-lbl">N° de miembro</span>
-            <span className="carnet-num-val mono">#{miembro.numero_miembro}</span>
-          </div>
-        </div>
-
-        {/* Estado de cuota — legible de un vistazo */}
-        <div className={`estado-banner ${ui.clase}`}>
-          <div className="estado-ic">{ui.icono}</div>
-          <div className="estado-tx">
-            <span className="estado-lead">{ui.lead}</span>
-            <span className="estado-sub">{ui.sub}</span>
-          </div>
-          <span className={`pill ${ui.pill}`}>
+          <span className={`pill ${PILL[estado] ?? "pill-idle"}`}>
             <span className="pill-dot" />
             {ETIQUETA_ESTADO[estado] ?? estado}
           </span>
         </div>
 
-        {/* Beneficios — teaser del módulo de comercios adheridos */}
-        <div className="row-link" aria-disabled="true">
-          <span className="row-link-ic"><IconGift /></span>
-          <span className="row-link-tx">
-            <b>Tus beneficios</b>
-            <small>Descuentos en comercios adheridos · próximamente</small>
-          </span>
-          <span className="row-link-chev">›</span>
+        {/* Mosaicos */}
+        <div className="tiles">
+          <TileSoon icon={<IconPesa />} label="Rutina personalizada" />
+          <TileSoon icon={<IconNutricion />} label="Plan nutricional" />
+          <TileSoon icon={<IconRegla />} label="Medidas y peso" />
+
+          {/* Cuota — REAL */}
+          <Link href="/inicio/cuota" className="tile">
+            <span className="tile-ic"><IconBilletera /></span>
+            <span className="tile-tx">
+              <span className="tile-label">Cuota y pagos</span>
+              <span className={`tile-sub ${alDia ? "ok" : "bad"}`}>
+                {alDia ? "Estás al día" : "Cuota pendiente"}
+              </span>
+            </span>
+          </Link>
+
+          {/* Anuncios — ancho completo */}
+          <div className="tile tile-wide is-soon" aria-disabled="true">
+            <span className="tile-ic"><IconMegafono /></span>
+            <span className="tile-tx">
+              <span className="tile-label">Anuncios y novedades</span>
+              <span className="tile-sub">Avisos del gimnasio</span>
+            </span>
+            <span className="tile-soon">Pronto</span>
+          </div>
         </div>
       </div>
+
+      {/* Barra inferior (como el mockup) */}
+      <nav className="bottomnav">
+        <span className="bn-item active"><IconHome /><span>Inicio</span></span>
+        <Link href="/inicio/cuota" className="bn-item"><IconBilletera /><span>Cuota</span></Link>
+        <form action={cerrarSesion} style={{ flex: 1 }}>
+          <button type="submit" className="bn-item" style={{ width: "100%", background: "transparent", border: "none" }}>
+            <IconSalir /><span>Salir</span>
+          </button>
+        </form>
+      </nav>
     </div>
   );
 }
 
-/* ── Íconos (inline, sin dependencias) ── */
-function IconCheck() {
+/* Mosaico "Próximamente" (no navega). */
+function TileSoon({ icon, label }: { icon: React.ReactNode; label: string }) {
   return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M20 6 9 17l-5-5" />
-    </svg>
+    <div className="tile is-soon" aria-disabled="true">
+      <span className="tile-ic">{icon}</span>
+      <span className="tile-tx">
+        <span className="tile-label">{label}</span>
+      </span>
+      <span className="tile-soon">Pronto</span>
+    </div>
   );
 }
-function IconClock() {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 7v5l3 2" />
-    </svg>
-  );
-}
-function IconPause() {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M9 6v12M15 6v12" />
-    </svg>
-  );
-}
-function IconGift() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
-    </svg>
-  );
-}
+
+/* ── Íconos inline (sin dependencias) ── */
+const svg = { width: 22, height: 22, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true };
+function IconPesa() { return <svg {...svg}><path d="M6.5 6.5 17.5 17.5M4 8l-1 1 3 3M8 4 7 3M20 16l1-1-3-3M16 20l1 1M14.5 9.5l-5 5" /></svg>; }
+function IconNutricion() { return <svg {...svg}><path d="M12 8a4 4 0 0 0-4-4c-2 0-3 1-3 1M12 8c0-2 1-4 4-4M12 8c-3 0-6 2-6 6a6 6 0 0 0 12 0c0-4-3-6-6-6Z" /></svg>; }
+function IconRegla() { return <svg {...svg}><rect x="3" y="8" width="18" height="8" rx="1.5" /><path d="M7 8v3M11 8v4M15 8v3M19 8v4" /></svg>; }
+function IconBilletera() { return <svg {...svg}><path d="M3 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H5" /><circle cx="16.5" cy="12" r="1.2" fill="currentColor" stroke="none" /></svg>; }
+function IconMegafono() { return <svg {...svg}><path d="M3 11v2a1 1 0 0 0 1 1h2l4 4V6L6 10H4a1 1 0 0 0-1 1ZM15 8a4 4 0 0 1 0 8M18 5a8 8 0 0 1 0 14" /></svg>; }
+function IconHome() { return <svg {...svg} width={20} height={20}><path d="M3 11l9-7 9 7M5 10v9h5v-5h4v5h5v-9" /></svg>; }
+function IconSalir() { return <svg {...svg} width={20} height={20}><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l-5-5 5-5M5 12h10" /></svg>; }
