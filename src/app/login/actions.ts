@@ -25,6 +25,15 @@ import type { EstadoLogin } from "./tipos";
 
 type Resultado = { ok: true; rol: Rol } | { ok: false; error: string };
 
+/**
+ * Atajo de demo: escribir "admin" como usuario entra a la cuenta admin usando
+ * un PIN corto (mismo mecanismo derivado que los miembros: passwordDePin).
+ * Facilita mostrar el panel sin tipear un email largo.
+ */
+const USUARIO_ADMIN_ATAJO = "admin";
+const EMAIL_ADMIN_ATAJO =
+  process.env.NEXT_PUBLIC_EMAIL_ADMIN ?? "admin@ninasfit.app";
+
 export async function iniciarSesion(
   _prev: EstadoLogin,
   formData: FormData,
@@ -36,11 +45,15 @@ export async function iniciarSesion(
     return { error: "Completá tu usuario y tu clave." };
   }
 
+  // Atajo "admin" + PIN → cuenta admin (clave derivada, como los miembros).
   // Documento = solo dígitos (6+). Cualquier otra cosa se trata como email.
+  const esAtajoAdmin = identificador.toLowerCase() === USUARIO_ADMIN_ATAJO;
   const esDocumento = /^\d{6,}$/.test(identificador);
-  const resultado = esDocumento
-    ? await loginMiembro(identificador, secreto)
-    : await loginEmail(identificador, secreto);
+  const resultado = esAtajoAdmin
+    ? await loginEmail(EMAIL_ADMIN_ATAJO, passwordDePin(secreto))
+    : esDocumento
+      ? await loginMiembro(identificador, secreto)
+      : await loginEmail(identificador, secreto);
 
   if (!resultado.ok) return { error: resultado.error };
 

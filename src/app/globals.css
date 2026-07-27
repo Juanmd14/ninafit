@@ -55,12 +55,18 @@ img { max-width: 100%; }
   width: 100%;
 }
 @media (min-width: 520px) {
-  body { background: #09060a; }
+  body { background: radial-gradient(circle at 50% -10%, #1c0e18, #09060a 68%); padding: 26px 0; }
   .app-shell {
-    max-width: 460px;
+    max-width: 402px;
+    height: calc(100dvh - 52px);
+    max-height: 880px;
+    min-height: 0;
     margin-inline: auto;
     background: var(--bg);
-    box-shadow: 0 0 0 1px var(--line), 0 30px 80px rgba(0, 0, 0, 0.55);
+    border-radius: 38px;
+    overflow: hidden;
+    border: 11px solid #060409;
+    box-shadow: 0 0 0 1px #2a1f28, 0 44px 90px rgba(0, 0, 0, 0.62);
   }
 }
 
@@ -196,6 +202,22 @@ img { max-width: 100%; }
 .row-link-tx b { font-family: var(--fh); font-weight: 650; font-size: 14.5px; color: var(--ink); }
 .row-link-tx small { color: var(--ink-2); font-size: 12.5px; }
 .row-link-chev { color: var(--ink-3); font-size: 18px; }
+
+/* ---------------- Novedades / avisos ---------------- */
+.section-card { background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--r-card); padding: 15px; display: flex; flex-direction: column; gap: 13px; }
+.novedad-list { display: flex; flex-direction: column; gap: 10px; }
+.novedad { background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--r-card); padding: 14px 15px; display: flex; flex-direction: column; gap: 5px; }
+.novedad-title { font-family: var(--fh); font-weight: 700; font-size: 15.5px; color: var(--ink); }
+.novedad-body { font-size: 13.5px; color: var(--ink-2); line-height: 1.5; white-space: pre-wrap; }
+.novedad-date { font-size: 11.5px; color: var(--ink-3); }
+
+/* ---------------- Panel de control (admin) ---------------- */
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+.stat { background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--r-card); padding: 14px 15px; display: flex; flex-direction: column; gap: 3px; }
+.stat-num { font-family: var(--fh); font-weight: 800; font-size: 24px; color: var(--ink); line-height: 1; }
+.stat-num.ok { color: var(--ok-ink); }
+.stat-lbl { font-size: 11.5px; color: var(--ink-3); letter-spacing: .02em; }
+.stat-foot { font-size: 11px; color: var(--ink-3); margin-top: 2px; }
 
 /* ---------------- Dashboard del miembro (mosaicos) ---------------- */
 /* Tarjeta de perfil (foto + nombre + N° + estado) */

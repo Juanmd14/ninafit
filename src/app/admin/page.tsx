@@ -29,6 +29,18 @@ export default async function AdminPage() {
 
   const lista = miembros ?? [];
 
+  // Panel de control: al día vs total + recaudación del mes en curso.
+  const hoy = new Date();
+  const periodo = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}-01`;
+  const alDia = lista.filter((m) => m.estado === "al_dia").length;
+  const { data: pagadas } = await supabase
+    .from("cuotas")
+    .select("monto_esperado")
+    .eq("periodo", periodo)
+    .eq("estado", "pagada");
+  const recaudado = (pagadas ?? []).reduce((s, c) => s + Number(c.monto_esperado ?? 0), 0);
+  const mesNombre = hoy.toLocaleDateString("es-AR", { month: "long" });
+
   return (
     <div className="screen">
       <header className="appbar">
@@ -40,9 +52,26 @@ export default async function AdminPage() {
       </header>
 
       <div className="screen-pad">
-        <Link href="/admin/alta" className="btn btn-primary btn-lg btn-block">
-          + Alta de miembro
-        </Link>
+        {/* Panel de control */}
+        <div className="stats">
+          <div className="stat">
+            <span className="stat-num ok">{alDia}<span style={{ color: "var(--ink-3)", fontSize: 16 }}>/{lista.length}</span></span>
+            <span className="stat-lbl">Miembros al día</span>
+          </div>
+          <div className="stat">
+            <span className="stat-num">${recaudado.toLocaleString("es-AR")}</span>
+            <span className="stat-lbl">Recaudado en {mesNombre}</span>
+          </div>
+        </div>
+
+        <div style={{ display: "flex", gap: 10 }}>
+          <Link href="/admin/alta" className="btn btn-primary btn-block">
+            + Alta de miembro
+          </Link>
+          <Link href="/admin/novedades" className="btn btn-ghost btn-block">
+            Novedades
+          </Link>
+        </div>
 
         <div className="section">
           <h2 className="section-title">Padrón de miembros</h2>
