@@ -49,7 +49,8 @@ export default async function InicioPage() {
     <div className="screen has-bottomnav">
       <header className="appbar">
         <span className="appbar-brand" style={{ paddingLeft: 6 }}>
-          <span className="brand-mark brand-mark-sm">N</span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt="" width={30} height={30} style={{ objectFit: "contain" }} />
         </span>
         <div className="appbar-title">NiNa&apos;S HIIT</div>
         <form action={cerrarSesion} className="appbar-action">
