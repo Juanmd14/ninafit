@@ -20,7 +20,7 @@ export default async function LoginPage() {
             N
           </span>
           <h1 style={{ fontFamily: "var(--fh)", fontSize: 28, margin: 0 }}>
-            Ninas <em style={{ color: "var(--accent)" }}>Fit</em>
+            NiNa&apos;S <em style={{ color: "var(--accent)" }}>HIIT</em>
           </h1>
           <p className="screen-note" style={{ margin: 0 }}>
             Ingresá para ver tu carnet, cuota y beneficios.

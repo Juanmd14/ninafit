@@ -88,7 +88,7 @@ export default async function InicioPage() {
           <div className="carnet-top">
             <span className="carnet-brand">
               <span className="brand-mark brand-mark-sm">N</span>
-              Ninas Fit
+              NiNa&apos;S HIIT
             </span>
             <span className="carnet-chip">Miembro</span>
           </div>

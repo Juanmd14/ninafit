@@ -22,9 +22,9 @@ const spaceMono = Space_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Ninas Fit",
+  title: "NiNa'S HIIT",
   description: "Tu gimnasio, en una sola app.",
-  applicationName: "Ninas Fit",
+  applicationName: "NiNa'S HIIT",
 };
 
 export const viewport: Viewport = {
