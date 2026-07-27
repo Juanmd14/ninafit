@@ -1,0 +1,46 @@
+name: Backup base de datos
+
+# El free tier de Supabase no incluye backups automáticos y acá hay PII
+# (DNIs, pagos). Este workflow hace un pg_dump diario y lo guarda como
+# artifact PRIVADO del repo (no se commitea al historial).
+#
+# Requiere el secret SUPABASE_DB_URL con la connection string DIRECTA
+# (Project Settings > Database > Connection string > URI, puerto 5432,
+# NO el pooler 6543). Guardalo en: Settings > Secrets and variables > Actions.
+
+on:
+  schedule:
+    - cron: "0 6 * * *" # 06:00 UTC diario (~03:00 Argentina)
+  workflow_dispatch: {} # permite correrlo a mano desde la pestaña Actions
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Instalar cliente de PostgreSQL 16
+        run: |
+          sudo sh -c 'echo "deb https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/pgdg.gpg
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-16
+
+      - name: Generar dump comprimido
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "Falta el secret SUPABASE_DB_URL"; exit 1
+          fi
+          TS=$(date -u +%Y%m%d-%H%M%S)
+          echo "ARTIFACT_NAME=ninasfit-backup-$TS" >> "$GITHUB_ENV"
+          pg_dump "$DATABASE_URL" \
+            --format=custom --no-owner --no-privileges \
+            -f "ninasfit-backup-$TS.dump"
+
+      - name: Subir artifact (privado del repo)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: "*.dump"
+          retention-days: 30
+          if-no-files-found: error
