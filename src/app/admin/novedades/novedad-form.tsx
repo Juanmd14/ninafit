@@ -18,7 +18,7 @@ export function NovedadForm() {
     <form ref={formRef} action={accion} className="section-card">
       <div className="field">
         <label className="field-label" htmlFor="titulo">Título</label>
-        <input id="titulo" name="titulo" className="input" placeholder="Nuevos horarios de verano" autoComplete="off" required />
+        <input id="titulo" name="titulo" className="input" placeholder="Título" autoComplete="off" required />
       </div>
       <div className="field">
         <label className="field-label" htmlFor="cuerpo">Mensaje</label>

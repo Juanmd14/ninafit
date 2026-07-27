@@ -24,10 +24,20 @@ export default async function AdminPage() {
   const supabase = await createClient();
   const { data: miembros } = await supabase
     .from("vista_miembros_estado")
-    .select("id, nombre, apellido, dni, numero_miembro, estado")
-    .order("numero_miembro");
+    .select("id, nombre, apellido, dni, numero_miembro, estado");
 
-  const lista = miembros ?? [];
+  // Pendientes de pago primero (lo que el admin necesita resolver), y
+  // alfabético por apellido dentro de cada grupo para ubicar a alguien rápido.
+  const RANGO_ESTADO: Record<EstadoMiembro, number> = {
+    suspendida: 0,
+    en_pausa: 1,
+    al_dia: 2,
+  };
+  const lista = [...(miembros ?? [])].sort((a, b) => {
+    const rango = RANGO_ESTADO[a.estado as EstadoMiembro] - RANGO_ESTADO[b.estado as EstadoMiembro];
+    if (rango !== 0) return rango;
+    return `${a.apellido} ${a.nombre}`.localeCompare(`${b.apellido} ${b.nombre}`, "es");
+  });
 
   // Panel de control: al día vs total + recaudación del mes en curso.
   const hoy = new Date();

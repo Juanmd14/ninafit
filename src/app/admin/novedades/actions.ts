@@ -42,3 +42,16 @@ export async function publicarNovedad(
   revalidatePath("/inicio");
   return { error: null, ok: true };
 }
+
+/** Borra una novedad publicada (solo admin). */
+export async function eliminarNovedad(id: string): Promise<void> {
+  const actor = await getUsuarioActual();
+  if (!actor || actor.rol !== "admin") return;
+
+  const admin = createAdminClient();
+  await admin.from("novedades").delete().eq("id", id);
+
+  revalidatePath("/admin/novedades");
+  revalidatePath("/inicio/novedades");
+  revalidatePath("/inicio");
+}

@@ -96,7 +96,10 @@ export default async function InicioPage() {
 
           {/* Anuncios — REAL, ancho completo */}
           <Link href="/inicio/novedades" className="tile tile-wide">
-            <span className="tile-ic"><IconMegafono /></span>
+            <span className="tile-ic">
+              <IconMegafono />
+              {!!novedadesCount && <span className="tile-badge">{novedadesCount}</span>}
+            </span>
             <span className="tile-tx">
               <span className="tile-label">Anuncios y novedades</span>
               <span className="tile-sub">

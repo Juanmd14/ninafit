@@ -5,6 +5,7 @@ import Link from "next/link";
 import { requireUser } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { NovedadForm } from "./novedad-form";
+import { eliminarNovedad } from "./actions";
 
 function fecha(iso: string) {
   return new Date(iso).toLocaleDateString("es-AR", { day: "numeric", month: "long" });
@@ -44,6 +45,9 @@ export default async function AdminNovedadesPage() {
               <span className="novedad-title">{n.titulo}</span>
               <span className="novedad-body">{n.cuerpo}</span>
               <span className="novedad-date">{fecha(n.publicada_at)}</span>
+              <form action={eliminarNovedad.bind(null, n.id)}>
+                <button type="submit" className="novedad-del">Eliminar</button>
+              </form>
             </div>
           ))}
           {lista.length === 0 && <div className="empty">Todavía no publicaste avisos.</div>}
