@@ -53,7 +53,7 @@ export default async function AdminPage() {
           {lista.map((m) => {
             const estado = m.estado as EstadoMiembro;
             return (
-              <div key={m.id} className="padron-row">
+              <Link key={m.id} href={`/admin/miembro/${m.id}`} className="padron-row">
                 <span className="monogram padron-mono">
                   {iniciales(m.nombre, m.apellido)}
                 </span>
@@ -67,7 +67,7 @@ export default async function AdminPage() {
                   <span className="pill-dot" />
                   {ETIQUETA_ESTADO[estado] ?? estado}
                 </span>
-              </div>
+              </Link>
             );
           })}
           {lista.length === 0 && <div className="empty">Todavía no hay miembros.</div>}

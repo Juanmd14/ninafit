@@ -37,6 +37,19 @@ export type MetodoPago =
 /** Día del mes hasta el cual la cuota del período se considera al día. */
 export const DIA_LIMITE_PAGO = 10;
 
+/** Monto de cuota por defecto al registrar un pago sin importe explícito. */
+export const MONTO_CUOTA_DEFECTO = 18000;
+
+/** Nombre del mes de un período 'YYYY-MM-01' en español (ej. "julio 2026"). */
+export function nombrePeriodo(periodo: string): string {
+  const [anio, mes] = periodo.split("-").map(Number);
+  const meses = [
+    "enero", "febrero", "marzo", "abril", "mayo", "junio",
+    "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
+  ];
+  return `${meses[(mes ?? 1) - 1]} ${anio}`;
+}
+
 /** Etiquetas en español para mostrar en la UI. */
 export const ETIQUETA_ESTADO: Record<EstadoMiembro, string> = {
   al_dia: "Al día",
